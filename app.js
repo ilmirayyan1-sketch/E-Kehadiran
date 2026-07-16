@@ -1,22 +1,56 @@
-// Konfigurasi Asas Data Struktur E-Kehadiran
-function mulakanDatabase() {
-    let storage = localStorage.getItem("e_kehadiran_db");
-    if (!storage) {
-        const strukturAsal = {
-            senaraiKelas: ["5 Sains", "5 Sastera"],
-            pelajar: [
-                { id: 1, nama: "Ahmad Ali", kelas: "5 Sains", rekod: {} },
-                { id: 2, nama: "Siti Aminah", kelas: "5 Sains", rekod: {} },
-                { id: 3, nama: "Chong Wei", kelas: "5 Sastera", rekod: {} }
-            ]
-        };
-        localStorage.setItem("e_kehadiran_db", JSON.stringify(strukturAsal));
-        return strukturAsal;
-    }
-    return JSON.parse(storage);
-}
+// ==========================================
+// KONFIGURASI PROJEK FIREBASE ANDA (REAL-TIME CLOUD)
+// ==========================================
+const firebaseConfig = {
+  apiKey: "AIzaSyD_E15SVYx-cvQT07tJFzpiu5Vf8Na6Kp4",
+  authDomain: "e-kehadiran-b6847.firebaseapp.com",
+  projectId: "e-kehadiran-b6847",
+  storageBucket: "e-kehadiran-b6847.firebasestorage.app",
+  messagingSenderId: "332547811712",
+  appId: "1:332547811712:web:7d429d06a0f02a389a7965",
+  measurementId: "G-KR070XQ5PF"
+};
 
-let db = mulakanDatabase();
+// Mulakan Firebase & Firestore Database
+firebase.initializeApp(firebaseConfig);
+const firestore = firebase.firestore();
+
+// Membina Struktur Data Asal Sekiranya Awan Masih Kosong
+const strukturAsal = {
+    senaraiKelas: ["5 Sains", "5 Sastera"],
+    pelajar: [
+        { id: 1, nama: "Ahmad Ali", kelas: "5 Sains", rekod: {} },
+        { id: 2, nama: "Siti Aminah", kelas: "5 Sains", rekod: {} },
+        { id: 3, nama: "Chong Wei", kelas: "5 Sastera", rekod: {} }
+    ]
+};
+
+let db = { senaraiKelas: [], pelajar: [] };
+
+// Fungsi Utama untuk Memuatkan Data dari Cloud Firebase
+async function mulakanDatabase() {
+    try {
+        const docRef = firestore.collection("e_kehadiran").doc("database_utama");
+        const docSnap = await docRef.get();
+
+        if (docSnap.exists()) {
+            db = docSnap.data();
+        } else {
+            // Jika tiada data lagi di Cloud, hantar struktur asal sebagai pendaftaran pertama
+            await docRef.set(strukturAsal);
+            db = strukturAsal;
+        }
+
+        // Jalankan penjanaan visual antaramuka selepas data berjaya dimuat turun
+        janaPilihanMinggu();
+        janaPilihanKelas();
+        tukarKonfigurasiSesi();
+        paparLaporan();
+
+    } catch (error) {
+        console.error("Ralat memuatkan pangkalan data awan:", error);
+    }
+}
 
 // Menjana Pilihan 20 Minggu Semester secara Automatik
 function janaPilihanMinggu() {
@@ -29,7 +63,9 @@ function janaPilihanMinggu() {
     }
     
     if (pilihMinggu) pilihMinggu.innerHTML = htmlMinggu;
-    if (laporanMinggu) laporanMinggu.innerHTML += htmlMinggu;
+    if (laporanMinggu) {
+        laporanMinggu.innerHTML = '<option value="semua">Keseluruhan Semester</option>' + htmlMinggu;
+    }
 }
 
 // Kemas kini Pilihan Dropdown Kelas di index dan laporan
@@ -37,6 +73,7 @@ function janaPilihanKelas() {
     const pilihKelas = document.getElementById("pilihKelas");
     const laporanKelas = document.getElementById("laporanKelas");
     
+    if (!db.senaraiKelas) return;
     let htmlKelas = db.senaraiKelas.map(k => `<option value="${k}">${k}</option>`).join("");
     
     if (pilihKelas) pilihKelas.innerHTML = htmlKelas;
@@ -44,21 +81,27 @@ function janaPilihanKelas() {
 }
 
 // Tambah Kelas Kustom Baru
-function tambahKelas() {
+async function tambahKelas() {
     const namaInput = document.getElementById("namaKelasBaru");
     let nama = namaInput.value.trim();
     if (!nama) return alert("Sila masukkan nama kelas!");
     if (db.senaraiKelas.includes(nama)) return alert("Kelas ini sudah wujud!");
 
     db.senaraiKelas.push(nama);
-    localStorage.setItem("e_kehadiran_db", JSON.stringify(db));
-    namaInput.value = "";
-    janaPilihanKelas();
-    alert(`Kelas ${nama} berjaya didaftarkan!`);
+    
+    try {
+        await firestore.collection("e_kehadiran").doc("database_utama").set(db);
+        namaInput.value = "";
+        janaPilihanKelas();
+        tukarKonfigurasiSesi();
+        alert(`Kelas ${nama} berjaya didaftarkan ke Cloud!`);
+    } catch (error) {
+        alert("Gagal menyimpan ke awan!");
+    }
 }
 
 // Tambah Pelajar Baru ke dalam kelas yang dipilih semasa
-function tambahPelajar() {
+async function tambahPelajar() {
     const namaInput = document.getElementById("namaPelajarBaru");
     const kelasTerpilih = document.getElementById("pilihKelas").value;
     let nama = namaInput.value.trim();
@@ -68,15 +111,21 @@ function tambahPelajar() {
     let idBaru = db.pelajar.length > 0 ? db.pelajar[db.pelajar.length - 1].id + 1 : 1;
     db.pelajar.push({ id: idBaru, nama: nama, kelas: kelasTerpilih, rekod: {} });
     
-    localStorage.setItem("e_kehadiran_db", JSON.stringify(db));
-    namaInput.value = "";
-    tukarKonfigurasiSesi();
-    alert(`Pelajar ${nama} dimasukkan ke kelas ${kelasTerpilih}!`);
+    try {
+        await firestore.collection("e_kehadiran").doc("database_utama").set(db);
+        namaInput.value = "";
+        tukarKonfigurasiSesi();
+        alert(`Pelajar ${nama} dimasukkan ke kelas ${kelasTerpilih}!`);
+    } catch (error) {
+        alert("Ralat cloud: Gagal mendaftarkan pelajar.");
+    }
 }
 
 // Paparkan senarai nama pelajar berdasarkan kelas yang dipilih guru
 function tukarKonfigurasiSesi() {
-    const kelasTerpilih = document.getElementById("pilihKelas").value;
+    const pilihKelasElem = document.getElementById("pilihKelas");
+    if (!pilihKelasElem) return;
+    const kelasTerpilih = pilihKelasElem.value;
     const kontenaPelajar = document.getElementById("senaraiPelajar");
     if (!kontenaPelajar) return;
 
@@ -97,7 +146,7 @@ function tukarKonfigurasiSesi() {
                     <label class="btn btn-outline-success btn-sm px-3" for="hadir-${pelajar.id}"><i class="bi bi-check-circle"></i> Hadir</label>
 
                     <input type="radio" class="btn-check" name="status-${pelajar.id}" id="tidak-${pelajar.id}" value="Tidak Hadir">
-                    <label class="btn btn-outline-danger btn-sm px-3" for="tidak-1${pelajar.id}"><i class="bi bi-x-circle"></i> Ponteng</label>
+                    <label class="btn btn-outline-danger btn-sm px-3" for="tidak-${pelajar.id}"><i class="bi bi-x-circle"></i> Ponteng</label>
                 </div>
             </div>
         `;
@@ -105,7 +154,7 @@ function tukarKonfigurasiSesi() {
 }
 
 // Simpan data tandaan harian mengiringi struktur minggu
-function simpanKehadiran() {
+async function simpanKehadiran() {
     const tarikh = document.getElementById("tarikhKehadiran").value;
     const minggu = document.getElementById("pilihMinggu").value;
     const kelasTerpilih = document.getElementById("pilihKelas").value;
@@ -116,6 +165,9 @@ function simpanKehadiran() {
 
     pelajarKelas.forEach(pelajar => {
         const isHadir = document.getElementById(`hadir-${pelajar.id}`).checked;
+        if (!pelajar.rekod) {
+            pelajar.rekod = {};
+        }
         if (!pelajar.rekod[minggu]) {
             pelajar.rekod[minggu] = [];
         }
@@ -125,8 +177,12 @@ function simpanKehadiran() {
         pelajar.rekod[minggu].push({ tarikh: tarikh, status: isHadir ? "Hadir" : "Tidak Hadir" });
     });
 
-    localStorage.setItem("e_kehadiran_db", JSON.stringify(db));
-    alert("Kehadiran hari ini berjaya dikunci!");
+    try {
+        await firestore.collection("e_kehadiran").doc("database_utama").set(db);
+        alert("Kehadiran hari ini berjaya dikunci dan disimpan ke Cloud Database!");
+    } catch (error) {
+        alert("Gagal menyegerakkan data ke Cloud.");
+    }
 }
 
 // Memproses Analisis Kehadiran & Menyalakan Zon Amaran Merah (< 80%)
@@ -134,8 +190,12 @@ function paparLaporan() {
     const jadual = document.getElementById("jadualLaporan");
     if (!jadual) return;
 
-    const kelasTerpilih = document.getElementById("laporanKelas").value;
-    const mingguTerpilih = document.getElementById("laporanMinggu").value;
+    const laporKelasElem = document.getElementById("laporanKelas");
+    const laporMingguElem = document.getElementById("laporanMinggu");
+    if (!laporKelasElem || !laporMingguElem) return;
+
+    const kelasTerpilih = laporKelasElem.value;
+    const mingguTerpilih = laporMingguElem.value;
 
     let pelajarKelas = db.pelajar.filter(p => p.kelas === kelasTerpilih);
     jadual.innerHTML = "";
@@ -144,21 +204,23 @@ function paparLaporan() {
         let totalHari = 0;
         let hariHadir = 0;
 
-        if (mingguTerpilih === "semua") {
-            // Kira keseluruhan semester
-            Object.keys(pelajar.rekod).forEach(mgu => {
-                pelajar.rekod[mgu].forEach(sesi => {
-                    totalHari++;
-                    if (sesi.status === "Hadir") hariHadir++;
+        if (pelajar.rekod) {
+            if (mingguTerpilih === "semua") {
+                // Kira keseluruhan semester
+                Object.keys(pelajar.rekod).forEach(mgu => {
+                    pelajar.rekod[mgu].forEach(sesi => {
+                        totalHari++;
+                        if (sesi.status === "Hadir") hariHadir++;
+                    });
                 });
-            });
-        } else {
-            // Tapis satu minggu spesifik sahaja
-            if (pelajar.rekod[mingguTerpilih]) {
-                pelajar.rekod[mingguTerpilih].forEach(sesi => {
-                    totalHari++;
-                    if (sesi.status === "Hadir") hariHadir++;
-                });
+            } else {
+                // Tapis satu minggu spesifik sahaja
+                if (pelajar.rekod[mingguTerpilih]) {
+                    pelajar.rekod[mingguTerpilih].forEach(sesi => {
+                        totalHari++;
+                        if (sesi.status === "Hadir") hariHadir++;
+                    });
+                }
             }
         }
 
@@ -177,17 +239,20 @@ function paparLaporan() {
     });
 }
 
-function padamSemuaDataKelas() {
-    if(confirm("Adakah anda pasti mahu memadam semua rekod dan data pelajar?")) {
-        localStorage.removeItem("e_kehadiran_db");
-        location.reload();
+// Padam Keseluruhan Pangkalan Data Awan (Kembali ke Struktur Asal)
+async function padamSemuaData() {
+    if (confirm("Adakah anda pasti mahu memadam semua rekod dan data pelajar dari Cloud Database?")) {
+        try {
+            await firestore.collection("e_kehadiran").doc("database_utama").set(strukturAsal);
+            alert("Database dibersihkan!");
+            location.reload();
+        } catch (error) {
+            alert("Gagal membersihkan database.");
+        }
     }
 }
 
-// Panggilan Permulaan Aplikasi apabila Halaman Selesai Dimuat
+// Cetus Pemuatan Database Sejurus Laman Dibuka
 document.addEventListener("DOMContentLoaded", () => {
-    janaPilihanMinggu();
-    janaPilihanKelas();
-    tukarKonfigurasiSesi();
-    paparLaporan();
+    mulakanDatabase();
 });
