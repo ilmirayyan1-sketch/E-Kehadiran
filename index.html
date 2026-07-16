@@ -4,56 +4,91 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>E-Kehadiran - Menu Guru</title>
-    <!-- Guna Bootstrap CSS untuk reka bentuk pantas -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <style>
+        body { bg-color: #121212; background: linear-gradient(135deg, #121212 0%, #1a1a2e 100%); color: #e0e0e0; min-height: 100vh; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .card-custom { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; color: #fff; }
+        .form-control, .form-select { background-color: #222; border: 1px solid #444; color: #fff; }
+        .form-control:focus, .form-select:focus { background-color: #2a2a2a; border-color: #0d6efd; color: #fff; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); }
+        .student-row { background: rgba(255, 255, 255, 0.02); border-radius: 8px; transition: all 0.3s ease; }
+        .student-row:hover { background: rgba(255, 255, 255, 0.07); }
+    </style>
 </head>
-<body class="bg-light">
+<body>
 
-    <div class="container mt-5">
-        <h2 class="text-center mb-4">Sistem Inovasi E-Kehadiran</h2>
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h1 class="fw-bold text-transparent bg-clip-text bg-gradient"><i class="bi bi-shield-check text-primary"></i> E-Kehadiran Inovasi</h1>
+            <p class="text-muted">Pengurusan Kehadiran Pintar & Automatik</p>
+        </div>
         
-        <!-- Pilihan Kelas & Tarikh -->
-        <div class="card p-4 mb-4 shadow-sm">
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Pilih Tarikh</label>
-                    <input type="date" id="tarikhKehadiran" class="form-control">
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Pilih Kelas</label>
-                    <select id="pilihKelas" class="form-select">
-                        <option value="5-Sains">5 Sains</option>
-                        <option value="5-Sastera">5 Sastera</option>
-                    </select>
+        <div class="row g-4">
+            <!-- Bahagian Pengurusan Kustom Kelas & Pelajar -->
+            <div class="col-lg-4">
+                <div class="card-custom p-4 mb-4 shadow">
+                    <h4 class="mb-3 text-primary"><i class="bi bi-plus-circle-fill"></i> Pengurusan Kelas</h4>
+                    <div class="mb-3">
+                        <label class="form-label">Tambah Kelas Baru</label>
+                        <div class="input-group">
+                            <input type="text" id="namaKelasBaru" class="form-control" placeholder="Contoh: 5 Wawasan">
+                            <button class="btn btn-primary" onclick="tambahKelas()"><i class="bi bi-plus"></i></button>
+                        </div>
+                    </div>
+                    <hr class="border-secondary">
+                    <h4 class="mb-3 text-success"><i class="bi bi-person-plus-fill"></i> Tambah Pelajar</h4>
+                    <div class="mb-3">
+                        <label class="form-label">Nama Pelajar</label>
+                        <input type="text" id="namaPelajarBaru" class="form-control" placeholder="Nama Penuh Pelajar">
+                    </div>
+                    <button class="btn btn-success w-100" onclick="tambahPelajar()">Masukkan Pelajar</button>
                 </div>
             </div>
-        </div>
 
-        <!-- Senarai Pelajar -->
-        <div class="card p-4 shadow-sm">
-            <h4>Senarai Pelajar</h4>
-            <hr>
-            <div id="senaraiPelajar">
-                <!-- Data pelajar akan masuk di sini secara dinamik menggunakan JS -->
-                <div class="d-flex justify-content-between align-items-center mb-2 p-2 border-bottom">
-                    <span>1. Ahmad Ali</span>
-                    <div>
-                        <input type="radio" class="btn-check" name="status-1" id="hadir-1" value="Hadir" checked>
-                        <label class="btn btn-outline-success btn-sm" for="hadir-1">Hadir</label>
-
-                        <input type="radio" class="btn-check" name="status-1" id="tidak-1" value="Tidak Hadir">
-                        <label class="btn btn-outline-danger btn-sm" for="tidak-1">Tidak Hadir</label>
+            <!-- Bahagian Penandaan Kehadiran -->
+            <div class="col-lg-8">
+                <div class="card-custom p-4 shadow mb-4">
+                    <h4 class="mb-3"><i class="bi bi-calendar-check"></i> Tetapan Sesi Kontrol</h4>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Pilih Minggu</label>
+                            <select id="pilihMinggu" class="form-select" onchange="tukarKonfigurasiSesi()">
+                                <!-- Dijana secara dinamik oleh JS -->
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Pilih Kelas</label>
+                            <select id="pilihKelas" class="form-select" onchange="tukarKonfigurasiSesi()">
+                                <!-- Dijana secara dinamik -->
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Tarikh</label>
+                            <input type="date" id="tarikhKehadiran" class="form-control">
+                        </div>
                     </div>
                 </div>
+
+                <div class="card-custom p-4 shadow">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h4><i class="bi bi-people"></i> Senarai Pelajar</h4>
+                        <button class="btn btn-sm btn-outline-danger" onclick="padamSemuaDataKelas()"><i class="bi bi-trash"></i> Reset Kelas</button>
+                    </div>
+                    <hr class="border-secondary">
+                    <div id="senaraiPelajar" class="d-flex flex-column gap-2">
+                        <!-- Data dimasukkan oleh JS -->
+                    </div>
+                    
+                    <button class="btn btn-primary btn-lg w-100 mt-4 shadow" onclick="simpanKehadiran()"><i class="bi bi-save"></i> Simpan Rekod Hari Ini</button>
+                </div>
             </div>
-            
-            <button class="btn btn-primary w-100 mt-4" onclick="simpanKehadiran()">Simpan Rekod Hari Ini</button>
         </div>
         
-        <div class="text-center mt-3">
-            <a href="laporan.html" class="btn btn-secondary">Lihat Peratusan Kehadiran Semester</a>
+        <div class="text-center mt-5">
+            <a href="laporan.html" class="btn btn-outline-light px-4 py-2 rounded-pill"><i class="bi bi-bar-chart-line"></i> Buka Analisis Kehadiran Semester</a>
         </div>
     </div>
 
+    <script src="app.js"></script>
 </body>
 </html>
