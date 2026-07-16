@@ -7,7 +7,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <style>
-        body { bg-color: #121212; background: linear-gradient(135deg, #121212 0%, #1a1a2e 100%); color: #e0e0e0; min-height: 100vh; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background: linear-gradient(135deg, #121212 0%, #1a1a2e 100%); color: #e0e0e0; min-height: 100vh; font-family: 'Segoe UI', system-ui, sans-serif; }
         .card-custom { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 16px; color: #fff; }
         .form-control, .form-select { background-color: #222; border: 1px solid #444; color: #fff; }
         .form-control:focus, .form-select:focus { background-color: #2a2a2a; border-color: #0d6efd; color: #fff; box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); }
@@ -20,7 +20,7 @@
     <div class="container py-5">
         <div class="text-center mb-5">
             <h1 class="fw-bold text-transparent bg-clip-text bg-gradient"><i class="bi bi-shield-check text-primary"></i> E-Kehadiran Inovasi</h1>
-            <p class="text-muted">Pengurusan Kehadiran Pintar & Automatik</p>
+            <p class="text-muted">Pengurusan Kehadiran Pintar & Automatik (Cloud Database)</p>
         </div>
         
         <div class="row g-4">
@@ -72,7 +72,7 @@
                 <div class="card-custom p-4 shadow">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h4><i class="bi bi-people"></i> Senarai Pelajar</h4>
-                        <button class="btn btn-sm btn-outline-danger" onclick="padamSemuaDataKelas()"><i class="bi bi-trash"></i> Reset Kelas</button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="padamSemuaData()"><i class="bi bi-trash"></i> Reset Database</button>
                     </div>
                     <hr class="border-secondary">
                     <div id="senaraiPelajar" class="d-flex flex-column gap-2">
@@ -89,6 +89,11 @@
         </div>
     </div>
 
+    <!-- PANGGILAN LIBRARY FIREBASE SDK SEBELUM APP.JS -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <!-- PANGGILAN LOGIK UTAMA -->
     <script src="app.js"></script>
 </body>
 </html>
