@@ -241,7 +241,7 @@ function paparLaporan() {
 
 // Padam Keseluruhan Pangkalan Data Awan (Kembali ke Struktur Asal)
 async function padamSemuaData() {
-    if (confirm("Adakah anda pasti mahu memadam semua rekod dan data pelajar dari Cloud Database?")) {
+    if (confirm("Adakah anda pasti mahu pemadam semua rekod dan data pelajar dari Cloud Database?")) {
         try {
             await firestore.collection("e_kehadiran").doc("database_utama").set(strukturAsal);
             alert("Database dibersihkan!");
@@ -251,8 +251,3 @@ async function padamSemuaData() {
         }
     }
 }
-
-// Cetus Pemuatan Database Sejurus Laman Dibuka
-document.addEventListener("DOMContentLoaded", () => {
-    mulakanDatabase();
-});
